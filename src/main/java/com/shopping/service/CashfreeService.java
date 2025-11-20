@@ -104,18 +104,37 @@ private String generateUpiQr(String orderId, double amount, String vpa) {
 }
 
     // WEBHOOK VERIFICATION
-    public boolean verifyWebhookSignature(String payload, String signature, String timestamp) {
-        try {
-            String data = timestamp + "." + payload;
-            Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec key = new SecretKeySpec(cashfreeConfig.getSecretKey().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-            mac.init(key);
-            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            String computed = Base64.getEncoder().encodeToString(hash);
-            return computed.equals(signature);
-        } catch (Exception e) {
-            log.error("Webhook signature verification failed", e);
-            return false;
+   public boolean verifyWebhookSignature(String payload, String receivedSignature, String timestamp) {
+    try {
+        // Cashfree docs: signature = Base64(HMAC_SHA256(timestamp + "." + payload, secretKey))
+        String data = timestamp + "." + payload;
+
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec key = new SecretKeySpec(
+                cashfreeConfig.getSecretKey().getBytes(StandardCharsets.UTF_8),
+                "HmacSHA256"
+        );
+        mac.init(key);
+
+        byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        String computedSignature = Base64.getEncoder().encodeToString(hash);
+
+        // Debug logs
+        log.info("Webhook Signature Verification -> Timestamp: {}", timestamp);
+        log.info("Payload: {}", payload);
+        log.info("Received Signature: {}", receivedSignature);
+        log.info("Computed Signature: {}", computedSignature);
+
+        boolean match = computedSignature.equals(receivedSignature);
+        if (!match) {
+            log.warn("Signature mismatch! Webhook rejected.");
         }
+        return match;
+
+    } catch (Exception e) {
+        log.error("Webhook signature verification failed", e);
+        return false;
     }
+}
+
 }
