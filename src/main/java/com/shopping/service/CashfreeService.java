@@ -66,7 +66,7 @@ public CreateOrderResult createOrder(Long dbOrderId, double amount, String email
 
     Map<String, Object> meta = new HashMap<>();
     meta.put("return_url", "https://jayshopy-ma48.vercel.app/order-success?order_id=" + orderId);
-    meta.put("notify_url", "https://jayshoppy3-backend-1.onrender.com/jay/webhook/cashfree");
+    meta.put("notify_url", "https://jayshopfinal.onrender.com/jay/webhook/cashfree");
     body.put("order_meta", meta);
 
     HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, getHeaders());
